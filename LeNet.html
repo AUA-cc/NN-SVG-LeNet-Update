@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+
+<title>NN-SVG LeNet Editor</title>
+
+
+<link
+    rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+>
+
+
+<link
+    rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+>
+
+
+<style>
+
+* {
+    font-weight: 100;
+}
+
+
+html,
+body {
+
+    margin: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+}
+
+
+#graph-container {
+
+    position: fixed;
+
+    inset: 0;
+}
+
+
+/* ============================================================
+   PANEL
+   ============================================================ */
+
+.nn-picker {
+
+    position: relative;
+
+    z-index: 1000;
+
+    width: 1000px;
+
+    height: calc(100vh - 30px);
+
+    margin: 15px;
+
+    box-sizing: border-box;
+
+
+    /*
+       必须用 scroll。
+
+       这样右边纵向、底部横向都始终具有滚动能力。
+    */
+
+    overflow: scroll;
+
+    scrollbar-gutter:
+        stable both-edges;
+
+    background: transparent;
+}
+
+
+/*
+   注意：
+
+   不再给 .nn-picker 写 max-width。
+
+   之前你的宽度滑块没效果，
+   很大程度就是被 max-width 限制了。
+*/
+
+
+.panel-content {
+
+    min-width: 200px;
+
+    padding-bottom: 30px;
+
+
+    padding-bottom: 30px;
+}
+
+
+.card {
+    background: rgba(255, 255, 255, 0.96);
+
+    width: max-content;
+    min-width: 100%;
+}
+
+
+/* ============================================================
+   MINIMIZED
+   ============================================================ */
+
+.nn-picker.minimized {
+
+    width: 390px !important;
+
+    height: auto !important;
+
+    overflow: hidden !important;
+
+    scrollbar-gutter: auto;
+}
+
+
+.nn-picker.minimized .panel-body {
+
+    display: none;
+}
+
+
+.nn-picker.minimized .panel-content {
+
+    min-width: 0;
+
+    padding-bottom: 0;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.card-header {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 50;
+
+    background: white;
+}
+
+
+.header-line {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+    flex-wrap: wrap;
+}
+
+
+.header-line h1 {
+
+    margin: 0;
+
+    font-size: 2rem;
+}
+
+
+.download-links {
+
+    display: flex;
+
+    gap: 12px;
+}
+
+
+.minimize-button {
+    position: sticky;
+
+    right: 12px;
+
+    margin-left: auto;
+
+    min-width: 36px;
+
+    z-index: 200;
+}
+
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+
+.tab-content {
+
+    padding: 20px;
+}
+
+
+.panel-width-row {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+}
+
+
+#panelWidth {
+
+    width: 320px;
+}
+
+
+/* ============================================================
+   ARCHITECTURE
+   ============================================================ */
+
+.architecture-header,
+.architecture-row {
+
+    display: grid;
+
+    grid-template-columns:
+
+        42px
+
+        65px
+        65px
+        65px
+
+        65px
+        65px
+
+        65px
+        65px
+
+        52px
+
+        58px
+        58px
+        58px
+
+        58px
+        58px
+
+        78px;
+
+    gap: 4px;
+
+    align-items: center;
+}
+
+
+.architecture-header {
+
+    margin-bottom: 5px;
+
+    font-size: 11px;
+
+    text-align: center;
+}
+
+
+.architecture-row {
+
+    margin-bottom: 6px;
+}
+
+
+.architecture-row input {
+
+    width: 100%;
+
+    min-width: 0;
+}
+
+
+.omit-cell {
+
+    text-align: center;
+}
+
+
+.operation-row {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-left: 46px;
+
+    margin-bottom: 14px;
+}
+
+
+.operation-row input {
+
+    width: 260px;
+}
+
+
+.vector-entry {
+
+    display: flex;
+
+    gap: 5px;
+
+    width: 260px;
+
+    margin-bottom: 6px;
+}
+
+
+/* ============================================================
+   SCROLL BAR
+   ============================================================ */
+
+.nn-picker::-webkit-scrollbar {
+
+    width: 12px;
+
+    height: 12px;
+}
+
+
+.nn-picker::-webkit-scrollbar-track {
+
+    background: #eee;
+}
+
+
+.nn-picker::-webkit-scrollbar-thumb {
+
+    background: #aaa;
+
+    border-radius: 6px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div id="graph-container"></div>
+
+
+
+<div
+    id="controlPanel"
+    class="nn-picker"
+>
+
+
+<div class="panel-content">
+
+
+<div class="card">
+
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+
+<div class="card-header">
+
+
+<div class="header-line">
+
+
+<h1>NN-SVG</h1>
+
+
+<div class="download-links">
+
+<a href="#" id="download-svg">
+SVG
+</a>
+
+<a href="#" id="download-png">
+PNG
+</a>
+
+<a href="#" id="download-pdf">
+PDF
+</a>
+
+</div>
+
+
+<button
+    id="toggle-panel"
+    class="btn btn-outline-secondary btn-sm minimize-button"
+    title="Minimize"
+>
+
+<span
+    id="toggle-panel-icon"
+    class="fa fa-minus"
+></span>
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- ============================================================
+     EVERYTHING BELOW CAN BE MINIMIZED
+     ============================================================ -->
+
+<div class="panel-body">
+
+
+<div class="tab-content">
+
+
+<!-- ============================================================
+     PANEL WIDTH
+     ============================================================ -->
+
+<div class="panel-width-row">
+
+
+<label>
+Panel Width
+</label>
+
+
+<input
+    type="range"
+    id="panelWidth"
+    min="420"
+    max="1500"
+    step="10"
+    value="1000"
+>
+
+
+<span id="panelWidthValue">
+
+1000
+
+</span>
+
+px
+
+
+</div>
+
+
+
+<hr>
+
+
+
+<!-- ============================================================
+     STYLE
+     ============================================================ -->
+
+<h4>Style</h4>
+
+
+<div>
+
+<input
+    type="color"
+    value="#e0e0e0"
+    id="color1"
+>
+
+<label>
+Color 1
+</label>
+
+</div>
+
+
+<div>
+
+<input
+    type="color"
+    value="#a0a0a0"
+    id="color2"
+>
+
+<label>
+Color 2
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Filter Opacity
+</label>
+
+<input
+    type="range"
+    id="rectOpacity"
+    min="0.1"
+    max="1"
+    step="0.01"
+    value="0.8"
+>
+
+</div>
+
+
+<div>
+
+<label>
+Border Width
+</label>
+
+<input
+    type="range"
+    id="borderWidth"
+    min="0.1"
+    max="3"
+    step="0.1"
+    value="1"
+>
+
+</div>
+
+
+<div>
+
+<input
+    type="checkbox"
+    id="showLabels"
+    checked
+>
+
+<label>
+Show Layer Labels
+</label>
+
+</div>
+
+
+
+<hr>
+
+
+
+<div>
+
+<input
+    type="checkbox"
+    id="sqrtLength"
+>
+
+<label>
+Sqrt Vector Length Scaling
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Length Size Scaling
+</label>
+
+<input
+    type="range"
+    id="lengthScale"
+    min="1"
+    max="200"
+    step="1"
+    value="100"
+>
+
+<span id="lengthSpan">
+100
+</span>
+
+%
+
+</div>
+
+
+
+<hr>
+
+
+
+<!-- ============================================================
+     ARCHITECTURE
+     ============================================================ -->
+
+<h4>Architecture</h4>
+
+
+<div class="architecture-header">
+
+
+<div></div>
+
+<div>Depth</div>
+
+<div>H</div>
+
+<div>W</div>
+
+<div>Box H</div>
+
+<div>Box W</div>
+
+<div>Filter H</div>
+
+<div>Filter W</div>
+
+<div>Omit</div>
+
+<div>Top</div>
+
+<div>Bottom</div>
+
+<div>Gap</div>
+
+<div>Step X</div>
+
+<div>Step Y</div>
+
+<div>Layer Space</div>
+
+
+</div>
+
+
+<div id="architecture-container"></div>
+
+
+<button
+    id="add-layer"
+    class="btn btn-primary btn-sm"
+>
+
+<span class="fa fa-plus"></span>
+
+Add Layer
+
+</button>
+
+
+
+<hr>
+
+
+
+<h4>Vector Length</h4>
+
+
+<div id="architecture2"></div>
+
+
+<button
+    id="add-vector"
+    class="btn btn-primary btn-sm"
+>
+
+<span class="fa fa-plus"></span>
+
+Add Vector
+
+</button>
+
+
+<br><br><br>
+
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ============================================================
+     LIBRARIES
+     ============================================================ -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+</script>
+
+
+<script
+src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.min.js">
+</script>
+
+
+<script src="LeNet.js"></script>
+
+
+
+<script>
+
+// ============================================================
+// DEFAULT DATA
+// ============================================================
+
+const initialArchitecture = [
+
+
+{
+    numberOfSquares: 3,
+
+    squareHeight: 32,
+    squareWidth: 32,
+
+    boxHeight: 55,
+    boxWidth: 55,
+
+    filterHeight: 5,
+    filterWidth: 5,
+
+    omit: false,
+
+    topCount: 3,
+    bottomCount: 3,
+
+    gap: 30,
+
+    stepX: 8,
+    stepY: 8,
+
+    layerSpace: 90,
+
+    op: "Convolution"
+},
+
+
+{
+    numberOfSquares: 64,
+
+    squareHeight: 16,
+    squareWidth: 16,
+
+    boxHeight: 45,
+    boxWidth: 45,
+
+    filterHeight: 5,
+    filterWidth: 5,
+
+    omit: true,
+
+    topCount: 3,
+    bottomCount: 8,
+
+    gap: 35,
+
+    stepX: 7,
+    stepY: 7,
+
+    layerSpace: 90,
+
+    op: "Convolution"
+},
+
+
+{
+    numberOfSquares: 128,
+
+    squareHeight: 8,
+    squareWidth: 8,
+
+    boxHeight: 28,
+    boxWidth: 28,
+
+    filterHeight: 4,
+    filterWidth: 4,
+
+    omit: true,
+
+    topCount: 3,
+    bottomCount: 8,
+
+    gap: 30,
+
+    stepX: 5,
+    stepY: 5,
+
+    layerSpace: 100,
+
+    op: "Flatten"
+}
+
+];
+
+
+const initialVectors = [
+
+    512,
+
+    10
+
+];
+
+
+// ============================================================
+// INPUT
+// ============================================================
+
+function numberInput(
+    name,
+    value,
+    min = 0
+) {
+
+    const input =
+        $("<input>");
+
+
+    input.attr({
+
+        type:
+            "number",
+
+        class:
+            "form-control form-control-sm",
+
+        name:
+            name,
+
+        step:
+            1,
+
+        min:
+            min
+    });
+
+
+    input.val(value);
+
+
+    return input;
+}
+
+
+// ============================================================
+// OMIT
+// ============================================================
+
+function syncOmitControls(wrapper) {
+
+    const enabled =
+
+        wrapper
+
+            .find(
+                'input[name="omit"]'
+            )
+
+            .prop(
+                "checked"
+            );
+
+
+    wrapper
+
+        .find(
+            'input[name="topCount"], input[name="bottomCount"], input[name="gap"]'
+        )
+
+        .prop(
+            "disabled",
+            !enabled
+        );
+}
+
+
+// ============================================================
+// CREATE LAYER
+// ============================================================
+
+function createLayerRow(data = {}) {
+
+    const wrapper =
+        $('<div class="entry"></div>');
+
+
+    const row =
+        $('<div class="architecture-row"></div>');
+
+
+    row.append(
+
+        $(
+
+            '<button ' +
+
+            'class="btn btn-secondary btn-sm btn-remove-layer">' +
+
+            '<span class="fa fa-minus"></span>' +
+
+            '</button>'
+
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "numberOfSquares",
+            data.numberOfSquares ?? 64,
+            1
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "squareHeight",
+            data.squareHeight ?? 16,
+            1
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "squareWidth",
+            data.squareWidth ?? 16,
+            1
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "boxHeight",
+            data.boxHeight ?? 40,
+            1
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "boxWidth",
+            data.boxWidth ?? 40,
+            1
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "filterHeight",
+            data.filterHeight ?? 5,
+            0
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "filterWidth",
+            data.filterWidth ?? 5,
+            0
+        )
+    );
+
+
+    // Omit
+
+    const omitCell =
+        $('<div class="omit-cell"></div>');
+
+
+    const omit =
+        $('<input type="checkbox" name="omit">');
+
+
+    omit.prop(
+        "checked",
+        !!data.omit
+    );
+
+
+    omitCell.append(omit);
+
+    row.append(omitCell);
+
+
+    row.append(
+        numberInput(
+            "topCount",
+            data.topCount ?? 3,
+            0
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "bottomCount",
+            data.bottomCount ?? 8,
+            0
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "gap",
+            data.gap ?? 30,
+            0
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "stepX",
+            data.stepX ?? 8,
+            0
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "stepY",
+            data.stepY ?? 8,
+            0
+        )
+    );
+
+
+    row.append(
+        numberInput(
+            "layerSpace",
+            data.layerSpace ?? 70,
+            0
+        )
+    );
+
+
+    wrapper.append(row);
+
+
+    // Operation
+
+    const operationRow =
+        $('<div class="operation-row"></div>');
+
+
+    operationRow.append(
+        $("<label>Op:</label>")
+    );
+
+
+    const opInput =
+        $('<input type="text" class="form-control form-control-sm" name="Op">');
+
+
+    opInput.val(
+        data.op ?? ""
+    );
+
+
+    operationRow.append(
+        opInput
+    );
+
+
+    wrapper.append(
+        operationRow
+    );
+
+
+    $("#architecture-container")
+        .append(
+            wrapper
+        );
+
+
+    syncOmitControls(
+        wrapper
+    );
+}
+
+
+// ============================================================
+// VECTOR
+// ============================================================
+
+function createVectorRow(value = "") {
+
+    const row =
+        $('<div class="vector-entry entry"></div>');
+
+
+    row.append(
+
+        $(
+
+            '<button ' +
+
+            'class="btn btn-secondary btn-sm btn-remove-vector">' +
+
+            '<span class="fa fa-minus"></span>' +
+
+            '</button>'
+
+        )
+    );
+
+
+    const input =
+        $('<input type="number" class="form-control form-control-sm" name="vectorLength" min="1">');
+
+
+    input.val(value);
+
+
+    row.append(input);
+
+
+    $("#architecture2")
+        .append(row);
+}
+
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+
+initialArchitecture.forEach(
+    createLayerRow
+);
+
+
+initialVectors.forEach(
+    createVectorRow
+);
+
+
+const lenet =
+    LeNet();
+
+
+// ============================================================
+// VALUE
+// ============================================================
+
+function getNumber(
+    row,
+    name,
+    fallback
+) {
+
+    const value =
+        parseFloat(
+
+            row.find(
+                `input[name="${name}"]`
+            ).val()
+        );
+
+
+    return Number.isFinite(value)
+        ?
+        value
+        :
+        fallback;
+}
+
+
+// ============================================================
+// READ LAYER
+// ============================================================
+
+function readLayer(
+    element,
+    index
+) {
+
+    const row =
+        $(element);
+
+
+    return {
+
+        numberOfSquares:
+
+            Math.max(
+                1,
+                Math.floor(
+                    getNumber(
+                        row,
+                        "numberOfSquares",
+                        1
+                    )
+                )
+            ),
+
+
+        squareHeight:
+
+            Math.max(
+                1,
+                getNumber(
+                    row,
+                    "squareHeight",
+                    1
+                )
+            ),
+
+
+        squareWidth:
+
+            Math.max(
+                1,
+                getNumber(
+                    row,
+                    "squareWidth",
+                    1
+                )
+            ),
+
+
+        boxHeight:
+
+            Math.max(
+                1,
+                getNumber(
+                    row,
+                    "boxHeight",
+                    40
+                )
+            ),
+
+
+        boxWidth:
+
+            Math.max(
+                1,
+                getNumber(
+                    row,
+                    "boxWidth",
+                    40
+                )
+            ),
+
+
+        filterHeight:
+
+            Math.max(
+                0,
+                getNumber(
+                    row,
+                    "filterHeight",
+                    5
+                )
+            ),
+
+
+        filterWidth:
+
+            Math.max(
+                0,
+                getNumber(
+                    row,
+                    "filterWidth",
+                    5
+                )
+            ),
+
+
+        omit:
+
+            row.find(
+                'input[name="omit"]'
+            ).prop(
+                "checked"
+            ),
+
+
+        topCount:
+
+            Math.max(
+                0,
+                Math.floor(
+                    getNumber(
+                        row,
+                        "topCount",
+                        3
+                    )
+                )
+            ),
+
+
+        bottomCount:
+
+            Math.max(
+                0,
+                Math.floor(
+                    getNumber(
+                        row,
+                        "bottomCount",
+                        8
+                    )
+                )
+            ),
+
+
+        gap:
+
+            Math.max(
+                0,
+                getNumber(
+                    row,
+                    "gap",
+                    30
+                )
+            ),
+
+
+        stepX:
+
+            Math.max(
+                0,
+                getNumber(
+                    row,
+                    "stepX",
+                    8
+                )
+            ),
+
+
+        stepY:
+
+            Math.max(
+                0,
+                getNumber(
+                    row,
+                    "stepY",
+                    8
+                )
+            ),
+
+
+        layerSpace:
+
+            Math.max(
+                0,
+                getNumber(
+                    row,
+                    "layerSpace",
+                    70
+                )
+            ),
+
+
+        op:
+
+            row.find(
+                'input[name="Op"]'
+            ).val(),
+
+
+        layer:
+            index
+    };
+}
+
+
+// ============================================================
+// RESTART
+// ============================================================
+
+function restart() {
+
+    const architecture =
+
+        $("#architecture-container .entry")
+
+            .map(
+
+                function (
+                    i,
+                    element
+                ) {
+
+                    return readLayer(
+                        element,
+                        i
+                    );
+                }
+            )
+
+            .get();
+
+
+    const architecture2 =
+
+        $('#architecture2 input[name="vectorLength"]')
+
+            .map(
+
+                function (
+                    i,
+                    element
+                ) {
+
+                    return parseFloat(
+                        $(element).val()
+                    );
+                }
+            )
+
+            .get()
+
+            .filter(
+                Number.isFinite
+            );
+
+
+    lenet.redraw({
+
+        architecture_:
+            architecture,
+
+        architecture2_:
+            architecture2,
+
+        sqrtLength_:
+            $("#sqrtLength")
+                .prop("checked"),
+
+        lengthScale_:
+            parseFloat(
+                $("#lengthScale").val()
+            )
+    });
+
+
+    lenet.redistribute();
+
+
+    lenet.style({
+
+        color1_:
+            $("#color1").val(),
+
+        color2_:
+            $("#color2").val(),
+
+        borderWidth_:
+            parseFloat(
+                $("#borderWidth").val()
+            ),
+
+        rectOpacity_:
+            parseFloat(
+                $("#rectOpacity").val()
+            ),
+
+        showLabels_:
+            $("#showLabels")
+                .prop("checked")
+    });
+}
+
+
+// ============================================================
+// PANEL WIDTH
+// ============================================================
+
+let lastPanelWidth =
+    1000;
+
+
+$("#panelWidth")
+
+.on(
+    "input",
+
+    function () {
+
+        const value =
+            parseFloat(
+                this.value
+            );
+
+
+        lastPanelWidth =
+            value;
+
+
+        $("#panelWidthValue")
+            .text(value);
+
+
+        $("#controlPanel")
+            .css(
+                "width",
+                value + "px"
+            );
+    }
+);
+
+
+// ============================================================
+// MINIMIZE / RESTORE
+// ============================================================
+
+$("#toggle-panel")
+
+.on(
+    "click",
+
+    function () {
+
+        const panel =
+            $("#controlPanel");
+
+
+        const minimized =
+            panel.hasClass(
+                "minimized"
+            );
+
+
+        if (!minimized) {
+
+            panel.addClass(
+                "minimized"
+            );
+
+
+            $("#toggle-panel-icon")
+
+                .removeClass(
+                    "fa-minus"
+                )
+
+                .addClass(
+                    "fa-plus"
+                );
+
+
+            $(this).attr(
+                "title",
+                "Restore"
+            );
+        }
+
+        else {
+
+            panel.removeClass(
+                "minimized"
+            );
+
+
+            panel.css(
+                "width",
+                lastPanelWidth + "px"
+            );
+
+
+            $("#toggle-panel-icon")
+
+                .removeClass(
+                    "fa-plus"
+                )
+
+                .addClass(
+                    "fa-minus"
+                );
+
+
+            $(this).attr(
+                "title",
+                "Minimize"
+            );
+        }
+    }
+);
+
+
+// ============================================================
+// ADD LAYER
+// ============================================================
+
+$("#add-layer")
+
+.on(
+    "click",
+
+    function () {
+
+        createLayerRow({
+
+            numberOfSquares:
+                64,
+
+            squareHeight:
+                16,
+
+            squareWidth:
+                16,
+
+            boxHeight:
+                40,
+
+            boxWidth:
+                40,
+
+            filterHeight:
+                5,
+
+            filterWidth:
+                5,
+
+            omit:
+                false,
+
+            topCount:
+                3,
+
+            bottomCount:
+                8,
+
+            gap:
+                30,
+
+            stepX:
+                8,
+
+            stepY:
+                8,
+
+            layerSpace:
+                70,
+
+            op:
+                "Convolution"
+        });
+
+
+        restart();
+    }
+);
+
+
+// ============================================================
+// ADD VECTOR
+// ============================================================
+
+$("#add-vector")
+
+.on(
+    "click",
+
+    function () {
+
+        createVectorRow("");
+
+        restart();
+    }
+);
+
+
+// ============================================================
+// REMOVE
+// ============================================================
+
+$(document)
+
+.on(
+    "click",
+    ".btn-remove-layer",
+
+    function () {
+
+        $(this)
+            .closest(".entry")
+            .remove();
+
+
+        restart();
+    }
+);
+
+
+$(document)
+
+.on(
+    "click",
+    ".btn-remove-vector",
+
+    function () {
+
+        $(this)
+            .closest(".entry")
+            .remove();
+
+
+        restart();
+    }
+);
+
+
+// ============================================================
+// OMIT
+// ============================================================
+
+$(document)
+
+.on(
+    "change",
+    'input[name="omit"]',
+
+    function () {
+
+        syncOmitControls(
+
+            $(this)
+                .closest(".entry")
+        );
+
+
+        restart();
+    }
+);
+
+
+// ============================================================
+// LIVE
+// ============================================================
+
+$(document)
+
+.on(
+    "input",
+    '#architecture-container input[type="number"]',
+
+    restart
+);
+
+
+$(document)
+
+.on(
+    "input",
+    '#architecture-container input[type="text"]',
+
+    restart
+);
+
+
+$(document)
+
+.on(
+    "input",
+    '#architecture2 input[type="number"]',
+
+    restart
+);
+
+
+$("#color1, #color2, #borderWidth, #rectOpacity, #lengthScale")
+
+.on(
+    "input",
+
+    function () {
+
+        $("#lengthSpan")
+            .text(
+                $("#lengthScale").val()
+            );
+
+
+        restart();
+    }
+);
+
+
+$("#showLabels, #sqrtLength")
+
+.on(
+    "change",
+    restart
+);
+
+
+// ============================================================
+// SVG SOURCE
+// ============================================================
+
+function getSVGSource() {
+
+    const node =
+        document.querySelector(
+            "#graph-container svg"
+        );
+
+
+    const clone =
+        node.cloneNode(true);
+
+
+    clone.setAttribute(
+        "xmlns",
+        "http://www.w3.org/2000/svg"
+    );
+
+
+    clone.setAttribute(
+        "width",
+        window.innerWidth
+    );
+
+
+    clone.setAttribute(
+        "height",
+        window.innerHeight
+    );
+
+
+    clone.setAttribute(
+        "viewBox",
+        "0 0 "
+        +
+        window.innerWidth
+        +
+        " "
+        +
+        window.innerHeight
+    );
+
+
+    return new XMLSerializer()
+        .serializeToString(
+            clone
+        );
+}
+
+
+// ============================================================
+// SVG DOWNLOAD
+// ============================================================
+
+$("#download-svg")
+
+.on(
+    "click",
+
+    function (e) {
+
+        e.preventDefault();
+
+
+        const blob =
+            new Blob(
+
+                [
+                    getSVGSource()
+                ],
+
+                {
+                    type:
+                        "image/svg+xml;charset=utf-8"
+                }
+            );
+
+
+        downloadBlob(
+            blob,
+            "nn.svg"
+        );
+    }
+);
+
+
+// ============================================================
+// GENERIC DOWNLOAD
+// ============================================================
+
+function downloadBlob(
+    blob,
+    name
+) {
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    a.href =
+        url;
+
+
+    a.download =
+        name;
+
+
+    a.click();
+
+
+    setTimeout(
+
+        function () {
+
+            URL.revokeObjectURL(
+                url
+            );
+        },
+
+        1000
+    );
+}
+
+
+// ============================================================
+// PNG
+// ============================================================
+
+$("#download-png")
+
+.on(
+    "click",
+
+    function (e) {
+
+        e.preventDefault();
+
+
+        const blob =
+            new Blob(
+
+                [
+                    getSVGSource()
+                ],
+
+                {
+                    type:
+                        "image/svg+xml;charset=utf-8"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const image =
+            new Image();
+
+
+        image.onload =
+            function () {
+
+
+                const scale =
+                    2;
+
+
+                const canvas =
+                    document.createElement(
+                        "canvas"
+                    );
+
+
+                canvas.width =
+                    window.innerWidth
+                    *
+                    scale;
+
+
+                canvas.height =
+                    window.innerHeight
+                    *
+                    scale;
+
+
+                const ctx =
+                    canvas.getContext(
+                        "2d"
+                    );
+
+
+                ctx.scale(
+                    scale,
+                    scale
+                );
+
+
+                ctx.fillStyle =
+                    "white";
+
+
+                ctx.fillRect(
+                    0,
+                    0,
+                    window.innerWidth,
+                    window.innerHeight
+                );
+
+
+                ctx.drawImage(
+                    image,
+                    0,
+                    0
+                );
+
+
+                canvas.toBlob(
+
+                    function (result) {
+
+                        downloadBlob(
+                            result,
+                            "nn.png"
+                        );
+                    },
+
+                    "image/png"
+                );
+
+
+                URL.revokeObjectURL(
+                    url
+                );
+            };
+
+
+        image.src =
+            url;
+    }
+);
+
+
+// ============================================================
+// PDF
+// ============================================================
+
+$("#download-pdf")
+
+.on(
+    "click",
+
+    async function (e) {
+
+        e.preventDefault();
+
+
+        const node =
+            document.querySelector(
+                "#graph-container svg"
+            );
+
+
+        const width =
+            window.innerWidth;
+
+
+        const height =
+            window.innerHeight;
+
+
+        const {
+            jsPDF
+        } =
+            window.jspdf;
+
+
+        const pdf =
+            new jsPDF({
+
+                orientation:
+                    width >= height
+                        ?
+                        "landscape"
+                        :
+                        "portrait",
+
+                unit:
+                    "pt",
+
+                format: [
+                    width,
+                    height
+                ]
+            });
+
+
+        await pdf.svg(
+
+            node,
+
+            {
+
+                x: 0,
+                y: 0,
+
+                width:
+                    width,
+
+                height:
+                    height
+            }
+        );
+
+
+        pdf.save(
+            "nn.pdf"
+        );
+    }
+);
+
+
+// ============================================================
+// START
+// ============================================================
+
+restart();
+
+</script>
+
+
+</body>
+
+</html>
