@@ -1,3 +1,28 @@
+# NN-SVG
+
+> This repository is a lightly modified version of the original **NN-SVG** project by Alexander Lenail.
+
+## Modifications
+
+This version adds several small improvements to the LeNet-style CNN visualization:
+
+- Independent control of feature-map drawing size
+- Per-layer X/Y spacing controls
+- Adjustable spacing between layers
+- Optional compact rendering of large channel dimensions using ellipsis
+- Improved CNN-to-FC connection positioning
+- SVG, PNG, and PDF export options
+- A resizable and scrollable control panel
+
+The original project structure and MIT License are preserved.
+
+---
+
+## Original NN-SVG
+
+The content below is from the original NN-SVG project.
+
+
 # [NN-SVG](https://alexlenail.me/NN-SVG/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
